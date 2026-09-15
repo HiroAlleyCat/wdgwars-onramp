@@ -330,7 +330,7 @@ flowchart TD
 From WDGWars portal docs + field-tested integrations:
 
 1. **One API key = one driver.** Putting the same key on two devices = one driver with two feeders, not two contesting drivers. Split-driver attribution needs two keys.
-2. **Cell grid is 0.02° lat × 0.03° lon.** Cron-rebuilds every 5 minutes server-side. Map UI can lag actual state.
+2. **Cell grid is 0.02° lat × 0.02° lon** (verified live 2026-08-24; it was 0.02 × 0.03 when this was first written). Cron-rebuilds every 5 minutes server-side. Map UI can lag actual state.
 3. **Read endpoints return caller-scope only.** You see your own captures via `/api/me/aps?since=`; you don't see who else is in a cell beyond dominant-owner/totals.
 4. **Cloudflare L7 shield trips on cold-IP bursts to `/api/*`** — 429 + code 1027 BEFORE reaching origin. Use `/endpoint/*` aliases or pin `gungnir >= v0.1.2`.
 5. **Marauder needs GPS attached.** Without GPS module, wardrive dumps are empty (memory-only, not re-verified in this pass — flag before recommending).
@@ -343,7 +343,7 @@ LOCOSP's documented numbers from the developer section of [wdgwars.pl/press](htt
 | Limit | Value | What happens when you exceed it |
 |---|---|---|
 | Networks per JSON batch (`/api/upload`) | 50,000 | 413. Split the scan into batches of 50k or fewer. |
-| CSV file size (`/api/upload-csv` and the profile upload form) | 30 MB | 413. Split the session into roughly 80k to 100k networks per file and upload sequentially with the same key. |
+| CSV file size (`/api/upload-csv` and the profile upload form) | 40 MB (verified live 2026-08-24; a `.gz` is judged by its uncompressed size) | 413. Do **not** split the file yourself: since 2026-08-19 the portal splits an oversized upload server side and keeps the header on every part. A hand-split piece written without the header makes the importer fall back to an older column layout and read signal strength as a coordinate, which has flagged a real account. |
 | Request size (hard server limit) | 64 MB | Rejected regardless of the two limits above. |
 | Request rate per API key | 120 requests / minute | 429. This is the origin's own limit, separate from the Cloudflare L7 shield in gotcha 4. |
 | New APs per user per day | 500,000, rolling 24h | Over-cap new APs are **silently skipped**. Re-scans of APs you already own still upload, still reinforce them, and do not count toward the cap. |
